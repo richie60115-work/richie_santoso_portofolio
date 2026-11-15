@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     git unzip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
     libonig-dev libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install mbstring exif pcntl bcmath gd zip \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,20 +15,27 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy Laravel project
 COPY . .
 
-# Install PHP dependencies
+# Install production dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Configure Apache to serve Laravel's public directory
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+# Configure Apache document root
+RUN sed -ri 's!/var/www/html!/var/www/html/public!g' \
+    /etc/apache2/sites-available/000-default.conf \
+    && sed -ri '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
+    /etc/apache2/apache2.conf
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Configure Apache for Render port 10000
+RUN sed -ri 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf \
+    && sed -ri 's/<VirtualHost \*:80>/<VirtualHost *:10000>/' \
+    /etc/apache2/sites-available/000-default.conf
 
-# Set permissions
+# Set Laravel permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
+EXPOSE 10000
+
+CMD ["apache2-foreground"]
