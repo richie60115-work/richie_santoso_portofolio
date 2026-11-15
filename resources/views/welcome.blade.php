@@ -1461,7 +1461,7 @@ button.project-link{background:none;border:0;cursor:pointer;font-family:inherit;
             <span class="project-type">INDIVIDUAL PROJECT</span>
             <h3>Online Order and Management System</h3>
             <p>Ordering and inventory system for industrial use, from creating products and managing raw materials to handling customer orders with customer online order buildin.</p>
-            <div class="project-tags"><span>Laravel 10</span><span>AdminLTE 4</span><span>MySQL</span><span>jQuery</span></div>
+            <div class="project-tags"><span>Laravel 10</span><span>AdminLTE 4</span><span>MySQL</span></div>
             <a href="{{ route('projects.online-order-and-management-system') }}" class="project-link">View details <span>→</span></a>
         </div>
     </article>
